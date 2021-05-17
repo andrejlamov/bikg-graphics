@@ -152,12 +152,12 @@
              .attr("viewBox", [-width / 2, -height / 2, width, height])
 
      simulation = d3.forceSimulation(nodes)
-                    .force("link", d3.forceLink(links).id(d => d.id).distance(0).strength(0.3))
-                    .force("charge", d3.forceManyBody().strength(-100))
+                    .force("link", d3.forceLink(links).id(d => d.id).distance(0).strength(0.1))
+                    .force("charge", d3.forceManyBody().strength(-50))
                     .force("x", d3.forceX())
                     .force("y", d3.forceY())
                     .force("collide",d3.forceCollide().radius(d => {
-                        return d.data.rDest || d.data.r
+                        return d.data.rDest || d.data.r || radius
                     }))
                     .tick(100)
 
@@ -247,9 +247,6 @@
                                            b?.zIndex || b?.data?.zIndex || 0))
 
 
-     simulation.alphaTarget(0.1).restart();
-
-
      const transitionSearch = () => {
          svg.selectAll("circle.logotype")
             .transition()
@@ -261,10 +258,10 @@
          
             .attr("r", d => radius*2) // TODO refactor radius*2
             .end()
-            .then( () => {
-                simulation.alphaTarget(0);
-            })
-
+         /* .then( () => {
+          *     simulation.alphaTarget(0);
+          * })
+          */
          return searchLink
              .transition()
              .ease(d3.easeLinear)
@@ -311,7 +308,7 @@
                    .transition()
                    .duration(4000)
                    .tween("move-logo-nodes-tween", (d, i) => {
-                       simulation.alphaTarget(0.1).restart();
+                       //simulation.alphaTarget(0.1).restart();
                        if(d.data.isLogo) {
                            const xScale = d3.scaleLinear().domain([0,1]).range([d.x, d.data.xInitial])
                            const yScale = d3.scaleLinear().domain([0,1]).range([d.y, d.data.yInitial])
@@ -326,7 +323,7 @@
                    }})
                    .end()
                    .then(() => {
-                       simulation.alphaTarget(0);
+                       //simulation.alphaTarget(0);
                    })
      }
 
@@ -340,21 +337,28 @@
                        return "white"
                    })
                    .attrTween("r", (d, i) => {
-                       simulation.alphaTarget(0.1).restart();
+                       //simulation.alphaTarget(0.1).restart();
                        if(d.data.isLogo) {
                            const xScale = d3.scaleLinear().domain([0,1]).range([d.x, d.data.xDest])
                            const yScale = d3.scaleLinear().domain([0,1]).range([d.y, d.data.yDest])
                            const radiusScale = d3.scaleLinear().domain([0,1]).range([radius*2, d.data.rDest])
 
-                           simulation.force("collide",d3.forceCollide().radius(d => {
-                               return d.data.r || 10
-                           })).alphaTarget(0.1).restart();
-
+                           /* simulation.force("collide",d3.forceCollide().radius(d => {
+                            *     return d.data.r || 10
+                            * })).alphaTarget(0.1).restart();
+                            */
+                           /* simulation
+                            *     .force("collide", d3.forceCollide().radius(d => { return d.data.r*4 || 10 })) */
+                           /* .alphaTarget(0.1)
+                            * .restart();
+                            */
+                           simulation.force("collide", d3.forceCollide().radius(d => { return d.data.r*4 || d.data.r || radius }))
+                                                 .alphaTarget(0.9)
+                                                 .restart()
                            return (t) => {
                                simulation
-                                   .force("collide", d3.forceCollide().radius(d => { return d.data.r*2 || 10 }))
-                                   .alphaTarget(0.1)
-                                   .restart();
+                                   .force("collide", d3.forceCollide().radius(d => { return d.data.r || 10 }))
+                                   .alphaTarget(0.01)
 
                                d.fx = xScale(t)
                                d.fy = yScale(t)
@@ -367,17 +371,22 @@
                    })
                    .end()
                    .then(() => {
-                       simulation.alphaTarget(0);
+                       //simulation.alphaTarget(0);
                    })
      }
 
+     simulation.alphaTarget(0.1).restart();
      transitionSearch()
      /* .then(
       *     transitionLogoNodes1
       * ) */
          .then(() => {
-             transitionLogoPaths()
-             transitionLogoNodes2()
+             return Promise.all([
+                 transitionLogoPaths(),
+                 transitionLogoNodes2()
+             ])
+         }).then(() => {
+             simulation.alphaTarget(0)
          })
      
      simulation.on("tick", () => {

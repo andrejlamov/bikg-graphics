@@ -1,0 +1,433 @@
+<!doctype html>
+<html>
+  <head>
+    <title>BIKG</title>
+    <style>
+     #root {
+         padding: 20px;
+         position: absolute;
+         top: 20px;
+         bottom: 20px;
+         right: 20px;
+         left: 20px;
+     }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <svg></svg>
+    </div>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="flare-2.js"></script>
+
+    <script>
+     const radius = 5
+     const id = "#root"
+     const logoPathStrokeWidth = 3
+
+     // todo: wrap into react fun component
+     const root = d3.hierarchy(data)
+
+     let links = root.links()
+     let nodes = root.descendants().map(d => {
+         d.data.zIndex = 1.5
+         return d
+     })
+
+     const logoNodes = nodes.sort((a,b) => d3.descending(a?.children?.length, b?.children?.length))
+                            .slice(0,7)
+                            .map((n, i) => {
+
+                                n.data.isLogo = true
+                                n.data.zIndex = 2
+                                n.data.logoIndex = i
+                                if(i == 0) {
+                                    n.data.xInitial = -24
+                                    n.data.yInitial = -21
+                                    n.data.xDest = 0
+                                    n.data.yDest = 0
+                                    n.data.rDest = radius*2
+
+                                }
+                                if(i == 1) {
+                                    n.data.xInitial = -151
+                                    n.data.yInitial = -92
+
+                                    n.data.xDest = -19
+                                    n.data.yDest = -137
+                                    n.data.rDest = radius*5
+                                }
+                                if(i == 2) {
+                                    n.data.xInitial = -170
+                                    n.data.yInitial = -92
+
+                                    n.data.xDest = -105
+                                    n.data.yDest = -32
+                                    n.data.rDest = radius*4
+                                }
+                                if(i == 3) {
+                                    n.data.xInitial = -170
+                                    n.data.yInitial = 10
+
+                                    n.data.xDest = 43
+                                    n.data.yDest = 63
+                                    n.data.rDest = radius*2
+                                }
+                                if(i == 4) {
+                                    n.data.xInitial = -115
+                                    n.data.yInitial = -65
+
+                                    n.data.xDest = -43
+                                    n.data.yDest = 69
+                                    n.data.rDest = radius*4
+                                }
+                                if(i == 5) {
+                                    n.data.xInitial = 148
+                                    n.data.yInitial = -57
+
+                                    n.data.xDest = 56
+                                    n.data.yDest = -26
+                                    n.data.rDest = radius*3
+                                }
+
+                                if(i == 6) {
+                                    n.data.xInitial = 28
+                                    n.data.yInitial = -104
+
+                                    n.data.xDest = -66
+                                    n.data.yDest = -84
+                                    n.data.rDest = radius*3
+                                }
+
+                                return n
+                            })
+
+     // todo: draw figure between two points (trigonometry)
+
+     // z-index: for logo links is default 1
+     const logoLinks = [
+         {source: logoNodes[0], target: logoNodes[1], zIndex: 0},
+         {source: logoNodes[2], target: logoNodes[1], zIndex: 0},
+         {source: logoNodes[3], target: logoNodes[2], zIndex: 0},
+         {source: logoNodes[3], target: logoNodes[4], zIndex: 0},
+         {source: logoNodes[4], target: logoNodes[5], zIndex: 0},
+         {source: logoNodes[6], target: logoNodes[5], zIndex: 0},
+         {isLogo: true, source: logoNodes[0], target: logoNodes[1], zIndex: 1.9, color: "hsl(188, 59%, 64%)", fillTween: 0},
+         {isLogo: true, source: logoNodes[2], target: logoNodes[1], zIndex: 1.9, color: "hsl(331, 78%, 45%)", fillTween: 0},
+         {isLogo: true, source: logoNodes[3], target: logoNodes[2], zIndex: 1.9, color: "hsl(40, 87%, 53%)", fillTween: 0},
+         {isLogo: true, source: logoNodes[3], target: logoNodes[4], zIndex: 1.9, color: "hsl(276, 52%, 21%)", fillTween: 0},
+         {isLogo: true, source: logoNodes[4], target: logoNodes[5], zIndex: 1.9, color: "hsl(67, 66%, 51%)", fillTween: 0},
+         {isLogo: true, source: logoNodes[6], target: logoNodes[5], zIndex: 1.9, color: "hsl(213, 63%, 24%)", fillTween: 0},
+     ].map((d,i) => {
+         d["index"] = links.length+i
+         return d
+     })
+
+     links = links.concat(logoLinks)
+
+     const leaves =
+         d3.shuffle(nodes)
+           .filter(d => d.children === [] || d.children === undefined)
+           .slice(0,20)
+
+     const searchLinks = leaves.map(d => {
+         i = d3.randomInt(0,logoNodes.length)()
+         p = d.path(logoNodes[i]).map(d => {
+             return d
+         })
+
+         return {
+             zIndex:1.1,
+             path: p
+         }
+     })
+
+     const bounds = d3.select(id).node().getBoundingClientRect()
+     const {width, height} = bounds
+
+     svg = d3.select(id)
+             .select("svg")
+             .attr("width", "100%")
+             .attr("height", "100%")
+             .attr("viewBox", [-width / 2, -height / 2, width, height])
+
+     simulation = d3.forceSimulation(nodes)
+                    .force("link", d3.forceLink(links).id(d => d.id).distance(0).strength(0.3))
+                    .force("charge", d3.forceManyBody().strength(-100))
+                    .force("x", d3.forceX())
+                    .force("y", d3.forceY())
+                    .force("collide",d3.forceCollide().radius(d => {
+                        return d.data.rDest || d.data.r
+                    }))
+                    .tick(100)
+
+
+     drag = simulation => {
+         function dragstarted(event, d) {
+             if (!event.active) simulation.alphaTarget(0.1).restart();
+
+             d.fx = d.x;
+             d.fy = d.y;
+         }
+
+         function dragged(event, d) {
+             d.fx = event.x;
+             d.fy = event.y;
+         }
+
+         function dragended(event, d) {
+             if (!event.active) simulation.alphaTarget(0);
+         }
+
+         return d3.drag()
+                  .on("start", dragstarted)
+                  .on("drag", dragged)
+                  .on("end", dragended);
+     }
+
+     searchLink = svg
+         .selectAll("path.search")
+         .data(searchLinks, (d,i) => i)
+         .enter()
+         .append("path")
+         .attr("fill", "none")
+         .attr("stroke", d => {
+             dest = d.path[d.path.length -1]
+             colors = ["hsl(188, 59%, 64%)",
+                       "hsl(331, 78%, 45%)",
+                       "hsl(40, 87%, 53%)",
+                       "hsl(276, 52%, 21%)",
+                       "hsl(67, 66%, 51%)",
+                       "hsl(213, 63%, 24%)"]
+             return d3.shuffle(colors)[0]
+         })
+         .attr("stroke-width", 3)
+         .classed("search", true)
+         .classed("graph-item", true)
+
+
+     link = svg
+         .selectAll("path.link")
+         .data(links)
+         .join("path")
+         .attr("fill", "none")
+         .attr("stroke", "grey")
+         .attr("opacity", d => d.isLogo ? 1 : 0.2)
+
+         .attr("stroke-width", 1)
+         .classed("logotype", d => d.isLogo)
+         .classed("graph-item", true)
+         .classed("link", true)
+
+
+     node = svg.selectAll("circle")
+               .data(nodes)
+               .join("circle")
+               .attr("fill", d => {
+                   if(d.data.color) {
+                       return d.data.color
+                   } else if (d.data.searchSource){
+                       return "red"
+                   } else {
+                       return "lightGrey"
+                   }
+               })
+               .attr("class", d => {
+                   return d.data.isLogo ? "logotype" : "non-logotype"
+               })
+               .classed("graph-item", true)
+               .attr("r", radius)
+               .on("click", (e, d) => {
+                   console.log(d)
+               })
+               .call(drag(simulation))
+
+     svg.selectAll(".graph-item")
+               .sort((a,b) => d3.ascending(a?.zIndex || a?.data?.zIndex || 0,
+                                           b?.zIndex || b?.data?.zIndex || 0))
+
+
+     simulation.alphaTarget(0.1).restart();
+
+
+     const transitionSearch = () => {
+         svg.selectAll("circle.logotype")
+            .transition()
+            .attr("stroke", "black")
+            .attr("stroke-width", 2)
+            .delay(2000)
+            .duration(2000)
+            .attr("fill", "white")
+         
+            .attr("r", d => radius*2) // TODO refactor radius*2
+            .end()
+            .then( () => {
+                simulation.alphaTarget(0);
+            })
+
+         return searchLink
+             .transition()
+             .ease(d3.easeLinear)
+             .duration(4000)
+             .tween("searchTween", (d, i) => {
+                 return (t) => {
+                     d.searchTween = t
+                     return t
+                 }
+             })
+             .attr("opacity", 0.8)
+             .attr("stroke-width", 1)
+             .end()
+             .then(
+                 () => {
+                     return searchLink
+                         .transition()
+                         .duration(4000)
+                         .attr("opacity", 0.2)
+                 }
+             )
+
+     }
+
+     const transitionLogoPaths = () => {
+         return svg.selectAll("path.logotype")
+                   .attr("stroke-width", 0)
+                   .attr("fill", "grey")
+                   .attr("stroke", "grey")
+                   .transition()
+                   .duration(4000)
+                   .attr("fill",d => d.color)
+                   .attr("stroke", d => d.color)
+                   .attrTween("stroke-width", (d, i) => {
+                       return (t) => {
+                           d.fillTween = t
+                           return t*logoPathStrokeWidth
+                       }
+                   })
+     }
+
+     const transitionLogoNodes1 = () => {
+         return svg.selectAll("circle.logotype")
+                   .transition()
+                   .duration(4000)
+                   .tween("move-logo-nodes-tween", (d, i) => {
+                       simulation.alphaTarget(0.1).restart();
+                       if(d.data.isLogo) {
+                           const xScale = d3.scaleLinear().domain([0,1]).range([d.x, d.data.xInitial])
+                           const yScale = d3.scaleLinear().domain([0,1]).range([d.y, d.data.yInitial])
+                           return (t) => {
+                               simulation
+                                   .alphaTarget(0.1)
+                                   .restart();
+                               d.fx = xScale(t)
+                               d.fy = yScale(t)
+                               return t
+                           }
+                   }})
+                   .end()
+                   .then(() => {
+                       simulation.alphaTarget(0);
+                   })
+     }
+
+     const transitionLogoNodes2 = () => {
+         return svg.selectAll("circle.logotype")
+                   .transition()
+                   .duration(8000)
+                   .attr("stroke", "black")
+                   .attr("stroke-width", 4)
+                   .attr("fill", d => {
+                       return "white"
+                   })
+                   .attrTween("r", (d, i) => {
+                       simulation.alphaTarget(0.1).restart();
+                       if(d.data.isLogo) {
+                           const xScale = d3.scaleLinear().domain([0,1]).range([d.x, d.data.xDest])
+                           const yScale = d3.scaleLinear().domain([0,1]).range([d.y, d.data.yDest])
+                           const radiusScale = d3.scaleLinear().domain([0,1]).range([radius*2, d.data.rDest])
+
+                           simulation.force("collide",d3.forceCollide().radius(d => {
+                               return d.data.r || 10
+                           })).alphaTarget(0.1).restart();
+
+                           return (t) => {
+                               simulation
+                                   .force("collide", d3.forceCollide().radius(d => { return d.data.r*2 || 10 }))
+                                   .alphaTarget(0.1)
+                                   .restart();
+
+                               d.fx = xScale(t)
+                               d.fy = yScale(t)
+                               d.data.r = radiusScale(t)
+                               return d.data.r
+                           };
+                       } else {
+                           return () => radius
+                       }
+                   })
+                   .end()
+                   .then(() => {
+                       simulation.alphaTarget(0);
+                   })
+     }
+
+     transitionSearch()
+     /* .then(
+      *     transitionLogoNodes1
+      * ) */
+         .then(() => {
+             transitionLogoPaths()
+             transitionLogoNodes2()
+         })
+     
+     simulation.on("tick", () => {
+         searchLine = d3.line().x(d => d.x).y(d => d.y)
+         searchLink
+             .attr("d", function(d, i){
+                 return searchLine(d.path)
+             })
+             .attr("stroke-dasharray", function(d) {
+                 // TODO: calc without DOM
+                 const length = d3.select(this).node().getTotalLength()
+                 return `${length} ${length}`
+             })
+             .attr("stroke-dashoffset", function(d) {
+                 const length = d3.select(this).node().getTotalLength()
+                 return length * (1 - d.searchTween)
+             })
+
+         link
+            .attr("d", (d) => {
+                const ctx = d3.path()
+                ctx.moveTo(d.source.x, d.source.y)
+                if(d.isLogo) {
+                    ctx.lineTo(
+                        d.target.x-d.target.data.rDest*0.1*d.fillTween
+                        ,
+                        d.target.y-d.target.data.rDest*0.1*d.fillTween
+                    )
+                    ctx.lineTo(
+                        d.target.x+d.target.data.rDest*0.1*d.fillTween
+                        ,
+                        d.target.y+d.target.data.rDest*0.1*d.fillTween
+                    )
+                } else {
+                    ctx.lineTo(d.target.x, d.target.y)
+                }
+                ctx.closePath()
+                return ctx.toString()
+            })
+
+         node
+            .attr("cx", d => {
+                return d.x
+            })
+            .attr("cy", d => {
+                return d.y
+            });
+
+     });
+
+    </script>
+  </body>
+</html>

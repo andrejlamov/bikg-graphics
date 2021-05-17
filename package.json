@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "browser-sync": "^2.26.12"
+  },
+  "scripts": {
+    "dev": "browser-sync start --server --files *"
+  }
+}

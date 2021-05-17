@@ -331,7 +331,7 @@
                    .transition()
                    .ease(d3.easeBack)
                    .delay((d,i) => i*500)
-                   .duration(2500)
+                   .duration(1000)
                    .attr("fill",d => d.color)
                    .attr("stroke", d => d.color)
                    .attr("opacity", 1)
@@ -389,7 +389,7 @@
                  transitionLogoPaths()
              ])
          }).then(() => {
-             simulation.alphaTarget(0.1).restart()
+             simulation.alphaTarget(0.2).restart()
          }).then(() => {
 
          })

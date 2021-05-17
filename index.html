@@ -18,6 +18,8 @@
       <svg></svg>
     </div>
     <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://unpkg.com/geometric@2.2.6/build/geometric.min.js"></script>
+
     <script src="flare-2.js"></script>
 
     <script>
@@ -262,7 +264,8 @@
      const transitionLogoPaths = () => {
          searchLink
              .transition()
-             .delay(2000)
+             .delay(1000)
+             .duration(3000)
              .attr("stroke", grey)
              .attr("stroke-width", 1)
              .attr("opacity", 0.2)
@@ -336,12 +339,15 @@
                  return searchLine(d.path)
              })
              .attr("stroke-dasharray", function(d) {
+                 const length = d3.sum(d3.pairs(d.path.map(n => [n.x, n.y])).map(geometric.lineLength))
                  // TODO: calc without DOM
-                 const length = d3.select(this).node().getTotalLength()
+                 //const length = d3.select(this).node().getTotalLength()
                  return `${length} ${length}`
              })
              .attr("stroke-dashoffset", function(d) {
-                 const length = d3.select(this).node().getTotalLength()
+                 const length = d3.sum(d3.pairs(d.path.map(n => [n.x, n.y])).map(geometric.lineLength))
+
+                 //const length = d3.select(this).node().getTotalLength()
                  return length * (1 - (d.searchTween || 0))
              })
 

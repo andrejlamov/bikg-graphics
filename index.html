@@ -25,7 +25,7 @@
      const radius = 4
      const id = "#root"
 
-     const logoPathStrokeWidth = 8
+     const logoPathStrokeWidth = 6
      const logoRadiusFactor = 1
      const grey = "hsl(180, 4%, 50%)"
      const darkGrey = "hsl(180, 4%, 26%)"
@@ -175,7 +175,7 @@
      const leaves =
          d3.shuffle(nodes)
            .filter(d => d.depth > 2 && !d.children )
-           .slice(0,50)
+           .slice(0,15)
 
      const searchLinks = leaves.map(d => {
          i = d3.randomInt(0,logoNodes.length)()
@@ -242,7 +242,7 @@
              dest = d.path[d.path.length -1]
              return linkColor(dest.index)
          })
-         .attr("stroke-width", 3)
+         .attr("stroke-width", 4)
          .classed("search", true)
          .classed("graph-item", true)
 
@@ -350,7 +350,7 @@
      const transitionLogoNodes = () => {
          return svg.selectAll("circle.logotype")
                    .transition()
-                   .duration(3000)
+                   .duration(1500)
                    .ease(d3.easeBack)
                    .attr("stroke", darkGrey)
                    .attr("stroke-width", 4)

@@ -21,9 +21,13 @@
     <script src="flare-2.js"></script>
 
     <script>
-     const radius = 5
+     const radius = 4
      const id = "#root"
-     const logoPathStrokeWidth = 3
+
+     const logoPathStrokeWidth = 8
+     const logoRadiusFactor = 1
+     const grey = "hsl(180, 4%, 50%)"
+     const darkGrey = "hsl(180, 4%, 26%)"
 
      // todo: wrap into react fun component
      const root = d3.hierarchy(data)
@@ -34,7 +38,15 @@
          return d
      })
 
-     const logoNodes = nodes.sort((a,b) => d3.descending(a?.children?.length, b?.children?.length))
+     const linkColor = d3.scaleOrdinal(
+              ["hsl(188, 59%, 64%)",
+               "hsl(331, 78%, 45%)",
+               "hsl(40, 87%, 53%)",
+               "hsl(276, 52%, 21%)",
+               "hsl(67, 66%, 51%)",
+               "hsl(213, 63%, 24%)"])
+
+     const logoNodes = d3.shuffle(nodes)
                             .slice(0,7)
                             .map((n, i) => {
 
@@ -42,61 +54,41 @@
                                 n.data.zIndex = 2
                                 n.data.logoIndex = i
                                 if(i == 0) {
-                                    n.data.xInitial = -24
-                                    n.data.yInitial = -21
                                     n.data.xDest = 0
                                     n.data.yDest = 0
-                                    n.data.rDest = radius*2
+                                    n.data.rDest = radius*2*logoRadiusFactor
 
                                 }
                                 if(i == 1) {
-                                    n.data.xInitial = -151
-                                    n.data.yInitial = -92
-
                                     n.data.xDest = -19
                                     n.data.yDest = -137
-                                    n.data.rDest = radius*5
+                                    n.data.rDest = radius*5*logoRadiusFactor
                                 }
                                 if(i == 2) {
-                                    n.data.xInitial = -170
-                                    n.data.yInitial = -92
-
                                     n.data.xDest = -105
                                     n.data.yDest = -32
-                                    n.data.rDest = radius*4
+                                    n.data.rDest = radius*4*logoRadiusFactor
                                 }
                                 if(i == 3) {
-                                    n.data.xInitial = -170
-                                    n.data.yInitial = 10
-
                                     n.data.xDest = 43
                                     n.data.yDest = 63
-                                    n.data.rDest = radius*2
+                                    n.data.rDest = radius*2*logoRadiusFactor
                                 }
                                 if(i == 4) {
-                                    n.data.xInitial = -115
-                                    n.data.yInitial = -65
-
                                     n.data.xDest = -43
                                     n.data.yDest = 69
-                                    n.data.rDest = radius*4
+                                    n.data.rDest = radius*4*logoRadiusFactor
                                 }
                                 if(i == 5) {
-                                    n.data.xInitial = 148
-                                    n.data.yInitial = -57
-
                                     n.data.xDest = 56
                                     n.data.yDest = -26
-                                    n.data.rDest = radius*3
+                                    n.data.rDest = radius*3*logoRadiusFactor
                                 }
 
                                 if(i == 6) {
-                                    n.data.xInitial = 28
-                                    n.data.yInitial = -104
-
                                     n.data.xDest = -66
                                     n.data.yDest = -84
-                                    n.data.rDest = radius*3
+                                    n.data.rDest = radius*3*logoRadiusFactor
                                 }
 
                                 return n
@@ -127,7 +119,7 @@
 
      const leaves =
          d3.shuffle(nodes)
-           .filter(d => d.children === [] || d.children === undefined)
+           .filter(d => d.depth > 2 )
            .slice(0,20)
 
      const searchLinks = leaves.map(d => {
@@ -159,7 +151,8 @@
                     .force("collide",d3.forceCollide().radius(d => {
                         return d.data.rDest || d.data.r || radius
                     }))
-                    .tick(100)
+                    .alphaTarget(0.1)
+                    .tick(200)
 
 
      drag = simulation => {
@@ -193,13 +186,7 @@
          .attr("fill", "none")
          .attr("stroke", d => {
              dest = d.path[d.path.length -1]
-             colors = ["hsl(188, 59%, 64%)",
-                       "hsl(331, 78%, 45%)",
-                       "hsl(40, 87%, 53%)",
-                       "hsl(276, 52%, 21%)",
-                       "hsl(67, 66%, 51%)",
-                       "hsl(213, 63%, 24%)"]
-             return d3.shuffle(colors)[0]
+             return linkColor(dest.index)
          })
          .attr("stroke-width", 3)
          .classed("search", true)
@@ -211,9 +198,8 @@
          .data(links)
          .join("path")
          .attr("fill", "none")
-         .attr("stroke", "grey")
-         .attr("opacity", d => d.isLogo ? 1 : 0.2)
-
+         .attr("stroke", grey)
+         .attr("opacity", 0.2)
          .attr("stroke-width", 1)
          .classed("logotype", d => d.isLogo)
          .classed("graph-item", true)
@@ -226,10 +212,8 @@
                .attr("fill", d => {
                    if(d.data.color) {
                        return d.data.color
-                   } else if (d.data.searchSource){
-                       return "red"
                    } else {
-                       return "lightGrey"
+                       return grey
                    }
                })
                .attr("class", d => {
@@ -246,22 +230,7 @@
                .sort((a,b) => d3.ascending(a?.zIndex || a?.data?.zIndex || 0,
                                            b?.zIndex || b?.data?.zIndex || 0))
 
-
      const transitionSearch = () => {
-         svg.selectAll("circle.logotype")
-            .transition()
-            .attr("stroke", "black")
-            .attr("stroke-width", 2)
-            .delay(2000)
-            .duration(2000)
-            .attr("fill", "white")
-         
-            .attr("r", d => radius*2) // TODO refactor radius*2
-            .end()
-         /* .then( () => {
-          *     simulation.alphaTarget(0);
-          * })
-          */
          return searchLink
              .transition()
              .ease(d3.easeLinear)
@@ -272,114 +241,94 @@
                      return t
                  }
              })
-             .attr("opacity", 0.8)
-             .attr("stroke-width", 1)
+             .attr("opacity", 1)
+             .attr("stroke-width", 2)
              .end()
-             .then(
-                 () => {
-                     return searchLink
-                         .transition()
-                         .duration(4000)
-                         .attr("opacity", 0.2)
-                 }
-             )
+             .then(() => {
+                 return svg.selectAll("circle.logotype")
+                           .attr("fill", grey)
+                           .transition()
+                           .duration(2000)
+                           .attr("fill", "white")
+                           .attr("stroke", grey)
+                           .attr("stroke-width", 2)
+                           .attr("r", d => radius*2) // TODO refactor radius*2
+                           .end()
+             })
+
 
      }
 
      const transitionLogoPaths = () => {
+         searchLink
+             .transition()
+             .delay(2000)
+             .attr("stroke", grey)
+             .attr("stroke-width", 1)
+             .attr("opacity", 0.2)
+             .end()
+
          return svg.selectAll("path.logotype")
                    .attr("stroke-width", 0)
-                   .attr("fill", "grey")
-                   .attr("stroke", "grey")
+                   .attr("opacity", 1)
+                   .attr("fill", grey)
+                   .attr("stroke", grey)
                    .transition()
-                   .duration(4000)
+                   .duration(5000)
                    .attr("fill",d => d.color)
                    .attr("stroke", d => d.color)
-                   .attrTween("stroke-width", (d, i) => {
+                   .attr("opacity", 1)
+                   .tween("logo-paths-tween", (d, i) => {
                        return (t) => {
                            d.fillTween = t
-                           return t*logoPathStrokeWidth
+                           return t
                        }
                    })
-     }
+                   .attr("stroke-width", (d, i) => {
+                       return logoPathStrokeWidth
+                   })
 
-     const transitionLogoNodes1 = () => {
-         return svg.selectAll("circle.logotype")
-                   .transition()
-                   .duration(4000)
-                   .tween("move-logo-nodes-tween", (d, i) => {
-                       //simulation.alphaTarget(0.1).restart();
-                       if(d.data.isLogo) {
-                           const xScale = d3.scaleLinear().domain([0,1]).range([d.x, d.data.xInitial])
-                           const yScale = d3.scaleLinear().domain([0,1]).range([d.y, d.data.yInitial])
-                           return (t) => {
-                               simulation
-                                   .alphaTarget(0.1)
-                                   .restart();
-                               d.fx = xScale(t)
-                               d.fy = yScale(t)
-                               return t
-                           }
-                   }})
-                   .end()
      }
 
      const transitionLogoNodes2 = () => {
          return svg.selectAll("circle.logotype")
                    .transition()
-                   .duration(8000)
-                   .attr("stroke", "black")
+                   .duration(3000)
+                   .attr("stroke", darkGrey)
                    .attr("stroke-width", 4)
                    .attr("fill", d => {
                        return "white"
                    })
-                   .attrTween("r", (d, i) => {
-                       //simulation.alphaTarget(0.1).restart();
-                       if(d.data.isLogo) {
-                           const xScale = d3.scaleLinear().domain([0,1]).range([d.x, d.data.xDest])
-                           const yScale = d3.scaleLinear().domain([0,1]).range([d.y, d.data.yDest])
-                           const radiusScale = d3.scaleLinear().domain([0,1]).range([radius*2, d.data.rDest])
-
-                           /* simulation.force("collide",d3.forceCollide().radius(d => {
-                            *     return d.data.r || 10
-                            * })).alphaTarget(0.1).restart();
-                            */
-                           /* simulation
-                            *     .force("collide", d3.forceCollide().radius(d => { return d.data.r*4 || 10 })) */
-                           /* .alphaTarget(0.1)
-                            * .restart();
-                            */
-                           /* simulation.force("collide", d3.forceCollide().radius(d => { return d.data.r*4 || d.data.r || radius }))
-                            *                       .restart() */
-                           return (t) => {
-                               d.fx = xScale(t)
-                               d.fy = yScale(t)
-                               d.data.r = radiusScale(t)
-                               return d.data.r
-                           };
-                       } else {
-                           return () => radius
-                       }
+                   .attrTween("logo-node-tween", (d, i) => {
+                       const xScale = d3.scaleLinear().domain([0,1]).range([d.x, d.data.xDest])
+                       const yScale = d3.scaleLinear().domain([0,1]).range([d.y, d.data.yDest])
+                       const radiusScale = d3.scaleLinear().domain([0,1]).range([radius*2, d.data.rDest])
+                       return (t) => {
+                           d.fx = xScale(t)
+                           d.fy = yScale(t)
+                           d.data.r = radiusScale(t)
+                           return t
+                       };
+                   })
+                   .attr("r", (d, i) => {
+                       return d.data.rDest
                    })
                    .end()
-                   .then(() => {
-                       //simulation.alphaTarget(0);
-                   })
      }
 
-     simulation.alphaTarget(0.1).restart()
-
      transitionSearch()
-               .then(() => {
-                   simulation.alphaTarget(0.2).restart()
-                   return Promise.all([
-                       transitionLogoPaths(),
-                       transitionLogoNodes2()
-                   ])
-               }).then(() => {
-                   simulation.alphaTarget(0.1).restart()
-               })
-     
+         .then(() => {
+             simulation.alphaTarget(0.2).restart()
+             return Promise.all([
+                 transitionLogoNodes2(),
+                 transitionLogoPaths()
+             ])
+         }).then(() => {
+             simulation.alphaTarget(0.1).restart()
+         }).then(() => {
+
+         })
+
      simulation.on("tick", () => {
          searchLine = d3.line().x(d => d.x).y(d => d.y)
          searchLink
@@ -393,7 +342,7 @@
              })
              .attr("stroke-dashoffset", function(d) {
                  const length = d3.select(this).node().getTotalLength()
-                 return length * (1 - d.searchTween)
+                 return length * (1 - (d.searchTween || 0))
              })
 
          link
@@ -427,6 +376,7 @@
             });
 
      });
+
 
     </script>
   </body>

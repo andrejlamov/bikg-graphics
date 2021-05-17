@@ -242,7 +242,7 @@
              dest = d.path[d.path.length -1]
              return linkColor(dest.index)
          })
-         .attr("stroke-width", 4)
+         .attr("stroke-width", 3)
          .classed("search", true)
          .classed("graph-item", true)
 
@@ -330,7 +330,7 @@
                    .attr("stroke", grey)
                    .transition()
                    .ease(d3.easeBack)
-                   .delay((d,i) => i*500)
+                   .delay((d,i) => i*300)
                    .duration(1000)
                    .attr("fill",d => d.color)
                    .attr("stroke", d => d.color)
@@ -357,7 +357,7 @@
                    .attr("fill", d => {
                        return "white"
                    })
-                   .delay((d,i) => i*500)
+                   .delay((d,i) => i*200)
                    .tween("logo-node-tween", (d, i) => {
                        const xScale = d3.scaleLinear().domain([0,1]).range([d.x, d.data.xDest])
                        const yScale = d3.scaleLinear().domain([0,1]).range([d.y, d.data.yDest])

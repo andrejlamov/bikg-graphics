@@ -322,9 +322,6 @@
                            }
                    }})
                    .end()
-                   .then(() => {
-                       //simulation.alphaTarget(0);
-                   })
      }
 
      const transitionLogoNodes2 = () => {
@@ -352,14 +349,9 @@
                            /* .alphaTarget(0.1)
                             * .restart();
                             */
-                           simulation.force("collide", d3.forceCollide().radius(d => { return d.data.r*4 || d.data.r || radius }))
-                                                 .alphaTarget(0.9)
-                                                 .restart()
+                           /* simulation.force("collide", d3.forceCollide().radius(d => { return d.data.r*4 || d.data.r || radius }))
+                            *                       .restart() */
                            return (t) => {
-                               simulation
-                                   .force("collide", d3.forceCollide().radius(d => { return d.data.r || 10 }))
-                                   .alphaTarget(0.01)
-
                                d.fx = xScale(t)
                                d.fy = yScale(t)
                                d.data.r = radiusScale(t)
@@ -375,19 +367,18 @@
                    })
      }
 
-     simulation.alphaTarget(0.1).restart();
+     simulation.alphaTarget(0.1).restart()
+
      transitionSearch()
-     /* .then(
-      *     transitionLogoNodes1
-      * ) */
-         .then(() => {
-             return Promise.all([
-                 transitionLogoPaths(),
-                 transitionLogoNodes2()
-             ])
-         }).then(() => {
-             simulation.alphaTarget(0)
-         })
+               .then(() => {
+                   simulation.alphaTarget(0.2).restart()
+                   return Promise.all([
+                       transitionLogoPaths(),
+                       transitionLogoNodes2()
+                   ])
+               }).then(() => {
+                   simulation.alphaTarget(0.1).restart()
+               })
      
      simulation.on("tick", () => {
          searchLine = d3.line().x(d => d.x).y(d => d.y)

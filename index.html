@@ -39,6 +39,12 @@
          return d
      })
 
+     const lineDistance = (a,b) => {
+         return Math.sqrt(
+             Math.pow((b.x - a.x), 2)
+             + Math.pow((b.y - a.y), 2)
+         )
+     }
      const linkColor = d3.scaleOrdinal(
               ["hsl(188, 59%, 64%)",
                "hsl(331, 78%, 45%)",
@@ -47,57 +53,144 @@
                "hsl(67, 66%, 51%)",
                "hsl(213, 63%, 24%)"])
 
-     const logoNodes = d3.shuffle(nodes)
-                            .slice(0,7)
-                            .map((n, i) => {
+    const logoCoords = [
+         {xDest: 0, yDest: 0, rDest: radius*2, isLogo: true, zIndex: 2},
+         {xDest: -19, yDest: -138, rDest: radius*5, isLogo: true, zIndex: 2},
+         {xDest: -105, yDest: -32, rDest: radius*4, isLogo: true, zIndex: 2},
+         {xDest: 43, yDest: 63, rDest: radius*2, isLogo: true, zIndex: 2},
+         {xDest: -43, yDest: 69, rDest: radius*4, isLogo: true, zIndex: 2},
+         {xDest: 56, yDest: -26, rDest: radius*3, isLogo: true, zIndex: 2},
+         {xDest: -66, yDest: -84, rDest: radius*3, isLogo: true, zIndex: 2}
+     ]
 
-                                n.data.isLogo = true
-                                n.data.zIndex = 2
-                                n.data.logoIndex = i
-                                if(i == 0) {
-                                    n.data.xDest = 0
-                                    n.data.yDest = 0
-                                    n.data.rDest = radius*2*logoRadiusFactor
+     /* logoNodes = d3.shuffle(nodes)
+      *                         .slice(0,7)
+      *                         .map((n, i) => {
 
-                                }
-                                if(i == 1) {
-                                    n.data.xDest = -19
-                                    n.data.yDest = -137
-                                    n.data.rDest = radius*5*logoRadiusFactor
-                                }
-                                if(i == 2) {
-                                    n.data.xDest = -105
-                                    n.data.yDest = -32
-                                    n.data.rDest = radius*4*logoRadiusFactor
-                                }
-                                if(i == 3) {
-                                    n.data.xDest = 43
-                                    n.data.yDest = 63
-                                    n.data.rDest = radius*2*logoRadiusFactor
-                                }
-                                if(i == 4) {
-                                    n.data.xDest = -43
-                                    n.data.yDest = 69
-                                    n.data.rDest = radius*4*logoRadiusFactor
-                                }
-                                if(i == 5) {
-                                    n.data.xDest = 56
-                                    n.data.yDest = -26
-                                    n.data.rDest = radius*3*logoRadiusFactor
-                                }
+      *                             n.data.isLogo = true
+      *                             n.data.zIndex = 2
+      *                             n.data.logoIndex = i
+      *                             if(i == 0) {
+      *                                 n.data.xDest = 0
+      *                                 n.data.yDest = 0
+      *                                 n.data.rDest = radius*2*logoRadiusFactor
 
-                                if(i == 6) {
-                                    n.data.xDest = -66
-                                    n.data.yDest = -84
-                                    n.data.rDest = radius*3*logoRadiusFactor
-                                }
+      *                             }
+      *                             if(i == 1) {
+      *                                 n.data.xDest = -19
+      *                                 n.data.yDest = -137
+      *                                 n.data.rDest = radius*5*logoRadiusFactor
+      *                             }
+      *                             if(i == 2) {
+      *                                 n.data.xDest = -105
+      *                                 n.data.yDest = -32
+      *                                 n.data.rDest = radius*4*logoRadiusFactor
+      *                             }
+      *                             if(i == 3) {
+      *                                 n.data.xDest = 43
+      *                                 n.data.yDest = 63
+      *                                 n.data.rDest = radius*2*logoRadiusFactor
+      *                             }
+      *                             if(i == 4) {
+      *                                 n.data.xDest = -43
+      *                                 n.data.yDest = 69
+      *                                 n.data.rDest = radius*4*logoRadiusFactor
+      *                             }
+      *                             if(i == 5) {
+      *                                 n.data.xDest = 56
+      *                                 n.data.yDest = -26
+      *                                 n.data.rDest = radius*3*logoRadiusFactor
+      *                             }
 
-                                return n
-                            })
+      *                             if(i == 6) {
+      *                                 n.data.xDest = -66
+      *                                 n.data.yDest = -84
+      *                                 n.data.rDest = radius*3*logoRadiusFactor
+      *                             }
 
+      *                             return n
+      *                         })
+      *   */
      // todo: draw figure between two points (trigonometry)
 
      // z-index: for logo links is default 1
+     /* const logoLinks = [
+      *     {source: logoNodes[0], target: logoNodes[1], zIndex: 0},
+      *     {source: logoNodes[2], target: logoNodes[1], zIndex: 0},
+      *     {source: logoNodes[3], target: logoNodes[2], zIndex: 0},
+      *     {source: logoNodes[3], target: logoNodes[4], zIndex: 0},
+      *     {source: logoNodes[4], target: logoNodes[5], zIndex: 0},
+      *     {source: logoNodes[6], target: logoNodes[5], zIndex: 0},
+      *     {isLogo: true, source: logoNodes[0], target: logoNodes[1], zIndex: 1.9, color: "hsl(188, 59%, 64%)", fillTween: 0},
+      *     {isLogo: true, source: logoNodes[2], target: logoNodes[1], zIndex: 1.9, color: "hsl(331, 78%, 45%)", fillTween: 0},
+      *     {isLogo: true, source: logoNodes[3], target: logoNodes[2], zIndex: 1.9, color: "hsl(40, 87%, 53%)", fillTween: 0},
+      *     {isLogo: true, source: logoNodes[3], target: logoNodes[4], zIndex: 1.9, color: "hsl(276, 52%, 21%)", fillTween: 0},
+      *     {isLogo: true, source: logoNodes[4], target: logoNodes[5], zIndex: 1.9, color: "hsl(67, 66%, 51%)", fillTween: 0},
+      *     {isLogo: true, source: logoNodes[6], target: logoNodes[5], zIndex: 1.9, color: "hsl(213, 63%, 24%)", fillTween: 0},
+      * ].map((d,i) => {
+      *     d["index"] = links.length+i
+      *     return d
+      * })
+
+      * links = links.concat(logoLinks)
+      */
+     const bounds = d3.select(id).node().getBoundingClientRect()
+     const {width, height} = bounds
+
+     svg = d3.select(id)
+             .select("svg")
+             .attr("width", "100%")
+             .attr("height", "100%")
+             .attr("viewBox", [-width / 2, -height / 2, width, height])
+
+     simulation = d3.forceSimulation(nodes)
+                    .force("link", d3.forceLink(links).id(d => d.id).distance(0).strength(0.1))
+                    .force("charge", d3.forceManyBody().strength(-50))
+                    .force("x", d3.forceX())
+                    .force("y", d3.forceY())
+                    .force("collide",d3.forceCollide().radius(d => {
+                        return d.data.rDest || d.data.r || radius
+                    }))
+                    .alphaTarget(0.1)
+                    .tick(600)
+
+     console.log(nodes)
+
+     distances = logoCoords.map((c, i) => {
+         distances = nodes.map(n => {
+             return {node: n, distance: lineDistance({x: c.xDest, y: c.yDest}, n)}
+         }).sort((a,b) => d3.ascending(a.distance, b.distance))
+         return {distances: distances, logoNode: c}
+     })
+
+     usedNodes = {}
+     logoNodes = []
+     distances.forEach(d => {
+         const ln = d.distances.find((d) => {
+             return !(d.node.data.name in usedNodes)
+         })
+         ln.node.data = {...ln.node.data, ...d.logoNode}
+         logoNodes.push(ln.node)
+         usedNodes[ln.node.data.name] = ln.node
+     })
+
+     const leaves =
+         d3.shuffle(nodes)
+           .filter(d => d.depth > 2 && !d.children )
+           .slice(0,20)
+
+     const searchLinks = leaves.map(d => {
+         i = d3.randomInt(0,logoNodes.length)()
+         p = d.path(logoNodes[i]).map(d => {
+             return d
+         })
+
+         return {
+             zIndex:1.1,
+             path: p
+         }
+     })
+
      const logoLinks = [
          {source: logoNodes[0], target: logoNodes[1], zIndex: 0},
          {source: logoNodes[2], target: logoNodes[1], zIndex: 0},
@@ -118,44 +211,7 @@
 
      links = links.concat(logoLinks)
 
-     const leaves =
-         d3.shuffle(nodes)
-           .filter(d => d.depth > 2 && !d.children )
-           .slice(0,20)
-
-     const searchLinks = leaves.map(d => {
-         i = d3.randomInt(0,logoNodes.length)()
-         p = d.path(logoNodes[i]).map(d => {
-             return d
-         })
-
-         return {
-             zIndex:1.1,
-             path: p
-         }
-     })
-
-     const bounds = d3.select(id).node().getBoundingClientRect()
-     const {width, height} = bounds
-
-     svg = d3.select(id)
-             .select("svg")
-             .attr("width", "100%")
-             .attr("height", "100%")
-             .attr("viewBox", [-width / 2, -height / 2, width, height])
-
-     simulation = d3.forceSimulation(nodes)
-                    .force("link", d3.forceLink(links).id(d => d.id).distance(0).strength(0.1))
-                    .force("charge", d3.forceManyBody().strength(-50))
-                    .force("x", d3.forceX())
-                    .force("y", d3.forceY())
-                    .force("collide",d3.forceCollide().radius(d => {
-                        return d.data.rDest || d.data.r || radius
-                    }))
-                    .alphaTarget(0.1)
-                    .tick(200)
-
-
+     console.log(logoNodes)
      drag = simulation => {
          function dragstarted(event, d) {
              if (!event.active) simulation.alphaTarget(0.1).restart();
@@ -277,6 +333,7 @@
                    .attr("stroke", grey)
                    .transition()
                    .ease(d3.easeCubic)
+                   .delay((d,i) => i*400)
                    .duration(5000)
                    .attr("fill",d => d.color)
                    .attr("stroke", d => d.color)
@@ -293,17 +350,18 @@
 
      }
 
-     const transitionLogoNodes2 = () => {
+     const transitionLogoNodes = () => {
          return svg.selectAll("circle.logotype")
                    .transition()
                    .duration(3000)
-                   .ease(d3.easeBack)
+                   .ease(d3.easeBack.overshoot(1.5))
                    .attr("stroke", darkGrey)
                    .attr("stroke-width", 4)
                    .attr("fill", d => {
                        return "white"
                    })
-                   .attrTween("logo-node-tween", (d, i) => {
+                   .delay((d,i) => i*300)
+                   .tween("logo-node-tween", (d, i) => {
                        const xScale = d3.scaleLinear().domain([0,1]).range([d.x, d.data.xDest])
                        const yScale = d3.scaleLinear().domain([0,1]).range([d.y, d.data.yDest])
                        const radiusScale = d3.scaleLinear().domain([0,1]).range([radius*2, d.data.rDest])
@@ -324,7 +382,7 @@
          .then(() => {
              simulation.alphaTarget(0.2).restart()
              return Promise.all([
-                 transitionLogoNodes2(),
+                 transitionLogoNodes(),
                  transitionLogoPaths()
              ])
          }).then(() => {

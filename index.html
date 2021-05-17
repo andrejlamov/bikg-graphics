@@ -291,7 +291,7 @@
          return searchLink
              .transition()
              .ease(d3.easeLinear)
-             .duration(4000)
+             .duration(9000)
              .tween("searchTween", (d, i) => {
                  return (t) => {
                      d.searchTween = t
@@ -321,8 +321,7 @@
              .transition()
              .ease(d3.easeCubic)
              .duration(5000)
-             .attr("stroke", grey)
-             .attr("stroke-width", 1)
+             .attr("stroke-width",1)
              .attr("opacity", 0.2)
              .end()
 
@@ -333,8 +332,8 @@
                    .attr("stroke", grey)
                    .transition()
                    .ease(d3.easeCubic)
-                   .delay((d,i) => i*400)
-                   .duration(5000)
+                   .delay((d,i) => i*200)
+                   .duration(3000)
                    .attr("fill",d => d.color)
                    .attr("stroke", d => d.color)
                    .attr("opacity", 1)
@@ -354,13 +353,13 @@
          return svg.selectAll("circle.logotype")
                    .transition()
                    .duration(3000)
-                   .ease(d3.easeBack.overshoot(1.5))
+                   .ease(d3.easeBack.overshoot(1.8))
                    .attr("stroke", darkGrey)
                    .attr("stroke-width", 4)
                    .attr("fill", d => {
                        return "white"
                    })
-                   .delay((d,i) => i*300)
+                   .delay((d,i) => i*200)
                    .tween("logo-node-tween", (d, i) => {
                        const xScale = d3.scaleLinear().domain([0,1]).range([d.x, d.data.xDest])
                        const yScale = d3.scaleLinear().domain([0,1]).range([d.y, d.data.yDest])
@@ -377,10 +376,9 @@
                    })
                    .end()
      }
-
      transitionSearch()
          .then(() => {
-             simulation.alphaTarget(0.2).restart()
+             simulation.alphaTarget(0.5).restart()
              return Promise.all([
                  transitionLogoNodes(),
                  transitionLogoPaths()

@@ -149,7 +149,7 @@
                     .force("x", d3.forceX())
                     .force("y", d3.forceY())
                     .force("collide",d3.forceCollide().radius(d => {
-                        return d.data.rDest || d.data.r || radius
+                        return d.data.rDest*4 || d.data.r*2 || radius*2
                     }))
                     .alphaTarget(0.14)
                     .tick(700)
